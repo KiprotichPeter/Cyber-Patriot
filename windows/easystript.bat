@@ -9,7 +9,7 @@ echo ----------     Go Luck     ----------
 echo. Enter options:
 echo. 
 echo 1) Passoword policy
-echo 2) Account lockout policy
+echo 2) Audit Policy
 echo 3) Disable guest and admin accounts
 echo 4) Flush dns
 echo 5) Firewall
@@ -17,7 +17,9 @@ echo 6) Windows automatic updates
 echo 7) Remote desktop
 echo 8) Windows defender
 echo 9) Block External USB Storage
-echo 10) Windows lockscreen timeout 
+echo 10) Windows lockscreen timeout
+echo 11) Windows Scan #Does not work find a way to fix it.
+echo 12) Update apps
 echo 20) exit
 echo 30) Endings
 echo. 
@@ -25,7 +27,9 @@ echo.
 set /p input="Enter an option: "
 
 if %input%==1 (
-	net Password policy
+	goto Password policy
+) else if %input%==2 (
+	goto Audit Policy
 ) else if %input%==3 ( 
 	goto Disable guest and admin accounts
 ) else if %input%==4 ( 
@@ -37,10 +41,14 @@ if %input%==1 (
 ) else if %input%==7 ( 
 	goto Remote desktop
 ) else if %input%==8 ( 
-	goto Windows defender
+	goto Windows_defender
+) else if %input%==11 (
+	goto Scan 
+) else if %input%==12 (
+	goto Apps_update
 ) else if %input%==20 ( 
 	exit
-)else if %input%==30 (
+) else if %input%==30 (
 	goto :Endings
 ) else (
 	cls
@@ -55,43 +63,37 @@ if %input%==1 (
 echo Password policy starts here
 net accounts
 net accounts /uniquepw:5 >nul
-net accounts /maxpwage:80 >nul
-net accounts /minpwage:15 >nul
-net accounts /minpwlen:10 >nul
+net accounts /maxpwage:90 >nul
+net accounts /minpwage:5 >nul
+net accounts /minpwlen:14 >nul
 net accounts /lockoutduration:30 >nul
 net accounts /lockoutthreshold:5 >nul
 #net accounts /lockoutwindows:10 >nul
+gpupdate /force >nul
 echo. Here are the results
 echo.
 net accounts
 pause
 goto Options
 
+:Audit Policy 
+echo Enabling success and failure in Audit Policy
+auditpol /get /category:*
+auditpol /set /category:* /success:enable
+auditpol /set /category:* /failure:enable
+echo Audit policy successfully executed
+auditpol /get /category:*
+pause 
+goto Options
+
+
 
 :Disable guest and admin accounts
 echo Disabling and Enabling guest and admin accounts
-set /p enable_account="Yoou want to disable or enable accounts? y/n: "
-if %enable_account == n (
-	echo Enablinng Administrator and Guest account.
-	net user Administrator /active:yes
-	net user guest /active:yes
-	#prints the accouonts status here
-	goto Options
-
-) else if == y (
-	echo Disabling Administrator and Guest account.
-	net user Administrator /active:no
-	net user guest /active:no
-	echo Here are the results
-	pause
-	net user Administrator
-	pause 
-	net user guest
-	pause
-	#prints the accouonts status here
-) else (
-	goto Options
-)
+net user Administrator /active:no
+net user guest /active:no
+pause
+goto Options
 
 :flush dns
 echo Flushing the DNS
@@ -131,7 +133,13 @@ goto Options
 pause
 goto Options
 
-:Windows defender
+:Windows_defender
+echo Will check update and update Microsoft Defender Antivirus
+cd C:\ProgramData\Microsoft\Windows Defender\Platform\4.18.2202.4-0 
+MpCmdRun -SignatureUpdate #Will check update and update Microsoft Defender Antivirus
+#MpCmdRun -Scan -Scantype 1 "Quick scan"
+#MpCmdRun -Scan -Scantype 2 "Full scan"
+#MpCmdRun -Scan -Scantype -BootSectorScan "Quick scan
 pause
 goto Options
 
@@ -141,7 +149,20 @@ reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Servises\USBSTOR" /t Reg_dw
 pause 
 goto Options
 
-:
+:Scan
+echo Doing windows scan
+sfc /scannow 
+echo windows scanning complited 
+pause 
+goto Options
+
+:Apps_update
+Echo Updating firefox
+#winget upgrade  -h --id  Mozilla.Firefox 
+winget upgrade -h --all
+pause 
+goto Options
+
 
 
 
